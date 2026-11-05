@@ -8,6 +8,14 @@ desktop.ini
 csv/
 slide_renders/
 
+# Presentation Artifacts
+*.pptx
+presentation_assets/
+Healthcare_EHR_Presentation.html
+Healthcare_EHR_Presentation_Deck.md
+generate_presentation.py
+*.py
+
 # Python
 __pycache__/
 *.py[cod]

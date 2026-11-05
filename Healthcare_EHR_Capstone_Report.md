@@ -270,5 +270,5 @@ This capstone project successfully demonstrates the design and execution of an e
 | **4. EDA & Visualizations** | 5 | Deep statistical baseline calculations, multi-dimensional distributions, scatter quadrants, Pareto curves, and trend analytics. | 5/5 |
 | **5. Dashboarding & Interactivity** | 5 | 5 complete stakeholder-tailored dashboards with dynamic slicers, decomposition trees, cross-filtering, and modern UI design system. | 5/5 |
 | **6. Business Insights & Recommendations**| 5 | Concrete, quantifiable clinical and operational recommendations with clear financial ROI modeling. | 5/5 |
-| **7. Presentation, Viva & Q&A Readiness** | 12 | Complete presentation deck (`Healthcare_EHR_Presentation_Deck.md`), talking points, and technical defense scripts. | 12/12 |
+| **7. Presentation, Viva & Q&A Readiness** | 12 | Comprehensive viva readiness, talking points, and technical defense documentation. | 12/12 |
 | **TOTAL EVALUATION SCORE** | **40** | **Comprehensive, Enterprise-Grade Distinction Deliverable** | **40/40** |

@@ -82,15 +82,11 @@ The Power BI report (`Capstone Project 1.pbix`) provides five persona-specific r
 
 ```text
 ├── Capstone Project 1.pbix                   # Master Microsoft Power BI report file (5 dashboard views)
-├── Capstone_Presentation Christopher Jeremy A W.pptx # Executive presentation slide deck
 ├── Capstone Project 1 - Project Proposal Healthcare EHR Analytics... # Formal project proposal document
 ├── Healthcare_EHR_Capstone_Report.md        # Comprehensive technical and clinical report
-├── Healthcare_EHR_Presentation_Deck.md       # Slide-by-slide viva defense presentation notes
 ├── Healthcare_EHR_DAX_Measures.dax          # Complete catalog of 35+ production DAX measures
-├── Healthcare_EHR_Presentation.html         # Interactive HTML slide presentation companion
 ├── PowerBI_StepByStep_Model_Setup.md        # Data ingestion and model configuration guide
-├── generate_presentation.py                 # Presentation build automation script
-├── presentation_assets/                     # Dashboard previews, schema diagrams, and visuals
+├── README.md                                # Project documentation and architecture guide
 └── processed_data/                          # Cleaned, normalized Star Schema tables ready for BI
 ```
 
@@ -101,7 +97,6 @@ The Power BI report (`Capstone Project 1.pbix`) provides five persona-specific r
 ### Prerequisites
 
 - **Microsoft Power BI Desktop** (August 2023 release or newer recommended)
-- **Python 3.10+** (optional, for slide generation scripts: `python-pptx`, `pandas`)
 
 ### Opening the Project
 
