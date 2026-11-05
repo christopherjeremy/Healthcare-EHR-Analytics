@@ -1,569 +1,373 @@
 import os
+import pptx
 from pptx import Presentation
 from pptx.util import Inches, Pt
 from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
 
-def create_deck():
-    prs = Presentation()
-    prs.slide_width = Inches(13.333)
-    prs.slide_height = Inches(7.5)
+prs = Presentation()
+prs.slide_width = Inches(13.333)
+prs.slide_height = Inches(7.5)
 
-    # Color Palette (Executive Dark Slate & Vibrant Healthcare Accents)
-    COLOR_BG = RGBColor(15, 23, 42)          # Slate 900 (#0F172A)
-    COLOR_CARD_BG = RGBColor(30, 41, 59)     # Slate 800 (#1E293B)
-    COLOR_CARD_BORDER = RGBColor(51, 65, 85) # Slate 700 (#334155)
-    COLOR_TEXT_MAIN = RGBColor(248, 250, 252)# Slate 50 (#F8FAFC)
-    COLOR_TEXT_MUTED = RGBColor(148, 163, 184)# Slate 400 (#94A3B8)
-    COLOR_TEXT_DIM = RGBColor(203, 213, 225) # Slate 300 (#CBD5E1)
+COLOR_BG = RGBColor(248, 250, 252)       # Light Slate 50 (#F8FAFC)
+COLOR_CARD = RGBColor(255, 255, 255)     # Pure White (#FFFFFF)
+COLOR_BORDER = RGBColor(226, 232, 240)   # Light Border (#E2E8F0)
+COLOR_TEXT_DARK = RGBColor(15, 23, 42)    # Dark Slate 900 (#0F172A)
+COLOR_TEXT_MUTED = RGBColor(71, 85, 105) # Slate 600 (#475569)
+
+COLOR_BLUE = RGBColor(37, 99, 235)       # Royal Blue (#2563EB)
+COLOR_BLUE_LIGHT = RGBColor(239, 246, 255)# Light Blue Tint (#EFF6FF)
+COLOR_AMBER = RGBColor(217, 119, 6)      # Amber (#D97706)
+COLOR_EMERALD = RGBColor(5, 150, 105)    # Emerald (#059669)
+COLOR_ROSE = RGBColor(225, 29, 72)       # Rose (#E11D48)
+COLOR_PURPLE = RGBColor(124, 58, 237)    # Purple (#7C3AED)
+
+def set_slide_bg(slide):
+    bg = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, 0, Inches(13.333), Inches(7.5))
+    bg.fill.solid(); bg.fill.fore_color.rgb = COLOR_BG; bg.line.fill.background()
+    return bg
+
+def add_header(slide, title, category_tag):
+    bar = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.5), Inches(0.3), Inches(12.333), Inches(0.75))
+    bar.fill.solid(); bar.fill.fore_color.rgb = COLOR_CARD
+    bar.line.color.rgb = COLOR_BORDER; bar.line.width = Pt(1)
     
-    COLOR_BLUE = RGBColor(59, 130, 246)      # Blue 500 (#3B82F6)
-    COLOR_BLUE_LIGHT = RGBColor(96, 165, 250)# Blue 400 (#60A5FA)
-    COLOR_AMBER = RGBColor(245, 158, 11)     # Amber 500 (#F59E0B)
-    COLOR_AMBER_LIGHT = RGBColor(251, 191, 36)# Amber 400 (#FBBF24)
-    COLOR_EMERALD = RGBColor(16, 185, 129)   # Emerald 500 (#10B981)
-    COLOR_EMERALD_LIGHT = RGBColor(52, 211, 153)# Emerald 400 (#34D399)
-    COLOR_ROSE = RGBColor(244, 63, 94)       # Rose 500 (#F43F5E)
-    COLOR_PURPLE = RGBColor(168, 85, 247)    # Purple 500 (#A855F7)
+    tb = slide.shapes.add_textbox(Inches(0.7), Inches(0.34), Inches(11.933), Inches(0.68))
+    tf = tb.text_frame; tf.word_wrap = True; tf.vertical_anchor = MSO_ANCHOR.TOP
+    tf.margin_left = tf.margin_right = tf.margin_top = tf.margin_bottom = 0
+    p0 = tf.paragraphs[0]; p0.text = category_tag.upper(); p0.font.size = Pt(8.5); p0.font.bold = True; p0.font.color.rgb = COLOR_AMBER
+    p0.space_after = Pt(2)
+    p1 = tf.add_paragraph(); p1.text = title; p1.font.size = Pt(15); p1.font.bold = True; p1.font.color.rgb = COLOR_TEXT_DARK
 
-    def set_slide_bg(slide):
-        bg = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, 0, Inches(13.333), Inches(7.5))
-        bg.fill.solid()
-        bg.fill.fore_color.rgb = COLOR_BG
-        bg.line.fill.background()
-        return bg
+def add_footer(slide, glossary_text, slide_num):
+    foot = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.5), Inches(6.82), Inches(12.333), Inches(0.38))
+    foot.fill.solid(); foot.fill.fore_color.rgb = COLOR_CARD
+    foot.line.color.rgb = COLOR_BORDER; foot.line.width = Pt(1)
+    
+    tb = slide.shapes.add_textbox(Inches(0.7), Inches(6.84), Inches(10.5), Inches(0.34))
+    tf = tb.text_frame; tf.word_wrap = True; tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+    tf.margin_left = tf.margin_right = tf.margin_top = tf.margin_bottom = 0
+    p = tf.paragraphs[0]; p.text = 'ABBREVIATIONS & GLOSSARY: ' + glossary_text
+    p.font.size = Pt(7.8); p.font.color.rgb = COLOR_TEXT_MUTED
+    
+    tb_num = slide.shapes.add_textbox(Inches(11.3), Inches(6.84), Inches(1.3), Inches(0.34))
+    tf_num = tb_num.text_frame; tf_num.vertical_anchor = MSO_ANCHOR.MIDDLE
+    tf_num.margin_left = tf_num.margin_right = tf_num.margin_top = tf_num.margin_bottom = 0
+    p_num = tf_num.paragraphs[0]; p_num.text = f'Slide {slide_num} / 10'; p_num.alignment = PP_ALIGN.RIGHT
+    p_num.font.size = Pt(8.5); p_num.font.bold = True; p_num.font.color.rgb = COLOR_BLUE
 
-    def add_header(slide, title, category, accent_color=COLOR_AMBER):
-        # Category tag
-        tb_cat = slide.shapes.add_textbox(Inches(0.8), Inches(0.35), Inches(11.733), Inches(0.3))
-        tf_cat = tb_cat.text_frame
-        tf_cat.word_wrap = True
-        tf_cat.margin_left = tf_cat.margin_top = tf_cat.margin_right = tf_cat.margin_bottom = 0
-        p_cat = tf_cat.paragraphs[0]
-        p_cat.text = category.upper()
-        p_cat.font.size = Pt(10)
-        p_cat.font.bold = True
-        p_cat.font.color.rgb = accent_color
-        
-        # Main Title
-        tb_title = slide.shapes.add_textbox(Inches(0.8), Inches(0.65), Inches(11.733), Inches(0.6))
-        tf_title = tb_title.text_frame
-        tf_title.word_wrap = True
-        tf_title.margin_left = tf_title.margin_top = tf_title.margin_right = tf_title.margin_bottom = 0
-        p_title = tf_title.paragraphs[0]
-        p_title.text = title
-        p_title.font.size = Pt(22)
-        p_title.font.bold = True
-        p_title.font.color.rgb = COLOR_TEXT_MAIN
+def add_card(slide, left, top, width, height, border_color=COLOR_BORDER, border_width=Pt(1)):
+    card = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, left, top, width, height)
+    card.fill.solid(); card.fill.fore_color.rgb = COLOR_CARD
+    card.line.color.rgb = border_color; card.line.width = border_width
+    return card
 
-    # =========================================================================
-    # SLIDE 1: TITLE & EXECUTIVE OVERVIEW
-    # =========================================================================
-    slide1 = prs.slides.add_slide(prs.slide_layouts[6])
-    set_slide_bg(slide1)
+# ----------------- SLIDE 1 -----------------
+s1 = prs.slides.add_slide(prs.slide_layouts[6])
+set_slide_bg(s1)
+add_header(s1, 'Enterprise Healthcare EHR Analytics Platform', 'Executive Project Overview • Capstone Defense')
 
-    tb1 = slide1.shapes.add_textbox(Inches(0.8), Inches(1.0), Inches(6.6), Inches(5.8))
-    tf1 = tb1.text_frame
-    tf1.word_wrap = True
-    tf1.margin_left = tf1.margin_top = tf1.margin_right = tf1.margin_bottom = 0
+# Left Card
+add_card(s1, Inches(0.5), Inches(1.2), Inches(6.0), Inches(5.45))
+tb1 = s1.shapes.add_textbox(Inches(0.75), Inches(1.35), Inches(5.5), Inches(5.15))
+tf1 = tb1.text_frame; tf1.word_wrap = True; tf1.vertical_anchor = MSO_ANCHOR.TOP
+tf1.margin_left = tf1.margin_right = tf1.margin_top = tf1.margin_bottom = 0
 
-    p_badge = tf1.paragraphs[0]
-    p_badge.text = "VALUE-BASED HEALTHCARE BUSINESS INTELLIGENCE"
-    p_badge.font.size = Pt(10)
-    p_badge.font.bold = True
-    p_badge.font.color.rgb = COLOR_AMBER
+p = tf1.paragraphs[0]; p.text = 'BUSINESS INTELLIGENCE & INFORMATICS CAPSTONE'; p.font.size = Pt(9); p.font.bold = True; p.font.color.rgb = COLOR_AMBER; p.space_after = Pt(3)
+p = tf1.add_paragraph(); p.text = 'Optimizing Clinical Outcomes, Acute Hospital Flow, and Payer Economics'; p.font.size = Pt(14); p.font.bold = True; p.font.color.rgb = COLOR_BLUE; p.space_after = Pt(6)
+p = tf1.add_paragraph(); p.text = 'An interactive multi-stakeholder Power BI analytics platform architected to overcome fragmented hospital databases and deliver role-specific business intelligence for executive healthcare decision-makers.'; p.font.size = Pt(9.2); p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(8)
 
-    p_main = tf1.add_paragraph()
-    p_main.text = "Enterprise Healthcare\nEHR Analytics Platform"
-    p_main.font.size = Pt(32)
-    p_main.font.bold = True
-    p_main.font.color.rgb = COLOR_BLUE_LIGHT
-    p_main.space_before = Pt(10)
-    p_main.space_after = Pt(10)
+p = tf1.add_paragraph(); p.text = '• 5 Dedicated Executive Views: Role-tailored dashboards for CEO, CFO, CMO, COO, RCM, and Chief Population Health Officer.'; p.font.size = Pt(9.0); p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(4)
+p = tf1.add_paragraph(); p.text = '• Advanced Methodological Depth: Normalized Star Schema, 35+ master DAX calculations, longitudinal 30-day readmissions, and statistical Z-scores.'; p.font.size = Pt(9.0); p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(4)
+p = tf1.add_paragraph(); p.text = '• Measurable Business Value: Quantified ,000+ annual financial ROI through Transition Care Management, discharge pathways, and financial desks.'; p.font.size = Pt(9.0); p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(10)
 
-    p_sub = tf1.add_paragraph()
-    p_sub.text = "An interactive multi-stakeholder Power BI analytics platform architected to solve the clinical, operational, and financial dilemmas of modern healthcare systems."
-    p_sub.font.size = Pt(13)
-    p_sub.font.color.rgb = COLOR_TEXT_MUTED
-    p_sub.space_after = Pt(16)
+p = tf1.add_paragraph(); p.text = 'Presenter: PGDA Capstone Candidate | Evaluation Standard: 40/40 Distinction'; p.font.size = Pt(8.8); p.font.bold = True; p.font.color.rgb = COLOR_TEXT_MUTED
 
-    # 3 Stat metrics on slide 1
-    metrics = [
-        ("Longitudinal Encounters", "53,346", "108-Year Span (1912-2020)", COLOR_BLUE_LIGHT),
-        ("Gross Billed Claims", "$6.87M", "Institutional Revenue", COLOR_AMBER),
-        ("Stakeholder Dashboards", "5 Views", "CEO, CMO, COO, RCM, PopHealth", COLOR_EMERALD_LIGHT)
-    ]
-    for i, (m_label, m_val, m_sub, m_col) in enumerate(metrics):
-        box_left = Inches(0.8 + i * 2.15)
-        box = slide1.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, box_left, Inches(4.3), Inches(2.05), Inches(1.3))
-        box.fill.solid()
-        box.fill.fore_color.rgb = COLOR_CARD_BG
-        box.line.color.rgb = COLOR_CARD_BORDER
-        
-        tf_b = box.text_frame
-        tf_b.word_wrap = True
-        tf_b.vertical_anchor = MSO_ANCHOR.MIDDLE
-        tf_b.margin_left = tf_b.margin_right = Inches(0.1)
-        
-        p0 = tf_b.paragraphs[0]
-        p0.text = m_label
-        p0.font.size = Pt(9)
-        p0.font.color.rgb = COLOR_TEXT_MUTED
-        
-        p1 = tf_b.add_paragraph()
-        p1.text = m_val
-        p1.font.size = Pt(16)
-        p1.font.bold = True
-        p1.font.color.rgb = m_col
-        
-        p2 = tf_b.add_paragraph()
-        p2.text = m_sub
-        p2.font.size = Pt(8)
-        p2.font.color.rgb = COLOR_TEXT_MUTED
+# Right Card
+add_card(s1, Inches(6.7), Inches(1.2), Inches(6.133), Inches(5.45))
+tb2 = s1.shapes.add_textbox(Inches(6.95), Inches(1.35), Inches(5.633), Inches(5.15))
+tf2 = tb2.text_frame; tf2.word_wrap = True; tf2.vertical_anchor = MSO_ANCHOR.TOP
+tf2.margin_left = tf2.margin_right = tf2.margin_top = tf2.margin_bottom = 0
 
-    # Footer metadata box
-    meta_box = slide1.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.8), Inches(6.0), Inches(6.4), Inches(0.7))
-    meta_box.fill.solid()
-    meta_box.fill.fore_color.rgb = COLOR_CARD_BG
-    meta_box.line.color.rgb = COLOR_CARD_BORDER
-    tf_m = meta_box.text_frame
-    tf_m.word_wrap = True
-    tf_m.margin_left = Inches(0.15)
-    tf_m.margin_top = Inches(0.1)
-    p_meta = tf_m.paragraphs[0]
-    p_meta.text = "Candidate / Specialization: PGDA Capstone Project Submission\nArchitecture: Normalized 9-Table Star Schema with 35+ Master DAX Measures"
-    p_meta.font.size = Pt(9.5)
-    p_meta.font.color.rgb = COLOR_TEXT_DIM
+p = tf2.paragraphs[0]; p.text = 'SYNTHEA ENTERPRISE EHR DATASET SPECIFICATIONS'; p.font.size = Pt(9); p.font.bold = True; p.font.color.rgb = COLOR_BLUE; p.space_after = Pt(3)
+p = tf2.add_paragraph(); p.text = 'Longitudinal Multi-Table Healthcare Repository'; p.font.size = Pt(14); p.font.bold = True; p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(6)
 
-    # Cover image
-    if os.path.exists('presentation_assets/cover.jpg'):
-        slide1.shapes.add_picture('presentation_assets/cover.jpg', Inches(7.5), Inches(1.1), width=Inches(5.0))
+p = tf2.add_paragraph(); p.text = '• Total Patient Cohort: 1,171 unique patients spanning complete multi-decade lifespans (108-year longitudinal history: 1912 to 2020).'; p.font.size = Pt(9.0); p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(4)
+p = tf2.add_paragraph(); p.text = '• Clinical Encounter Density: 53,346 total encounters across 6 classes (Wellness, Ambulatory, Outpatient, Urgent Care, Emergency, Inpatient).'; p.font.size = Pt(9.0); p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(4)
+p = tf2.add_paragraph(); p.text = '• Diagnoses & Comorbidity: 8,376 condition records standardized into 9 major medical specialties with Charlson comorbidity risk weights (1 to 6).'; p.font.size = Pt(9.0); p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(4)
+p = tf2.add_paragraph(); p.text = '• Pharmacy & Dispenses: 42,989 medication dispenses categorized by RxNorm drug classes to track polypharmacy exposure (>=5 active drugs).'; p.font.size = Pt(9.0); p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(4)
+p = tf2.add_paragraph(); p.text = '• Clinical Procedures: 34,981 procedures spanning management, diagnostics, and surgical interventions with procedural base costs.'; p.font.size = Pt(9.0); p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(4)
+p = tf2.add_paragraph(); p.text = '• Payer & Facility Network: 10 major payer plans (Medicare, Medicaid, Commercial) and 1,120 provider facilities across 14 Massachusetts counties.'; p.font.size = Pt(9.0); p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(8)
 
-    slide1.notes_slide.notes_text_frame.text = (
-        "Good morning evaluators. Today I am presenting our capstone project: an Enterprise Healthcare EHR Analytics platform built in Power BI. "
-        "Modern hospitals struggle with the Triple Aim dilemma—balancing high clinical care quality, acute bed capacity, and financial solvency. "
-        "We architected a 9-table Star Schema covering 53,346 encounters to provide 5 dedicated executive views for hospital decision-makers."
-    )
+p = tf2.add_paragraph(); p.text = 'Data Model Architecture: 9 Normalized Tables with 1-to-Many Relational Integrity'; p.font.size = Pt(8.8); p.font.bold = True; p.font.color.rgb = COLOR_EMERALD
 
-    # =========================================================================
-    # SLIDE 2: THE HEALTHCARE TRIPLE AIM DILEMMA
-    # =========================================================================
-    slide2 = prs.slides.add_slide(prs.slide_layouts[6])
-    set_slide_bg(slide2)
-    add_header(slide2, 'The Healthcare Triple Aim Dilemma & Problem Statement', 'Business & Clinical Problem Statement', COLOR_AMBER)
+add_footer(s1, 'EHR = Electronic Health Record | BI = Business Intelligence | DAX = Data Analysis Expressions | Rx = Prescription / Medication | SDoH = Social Determinants of Health', 1)
 
-    problems = [
-        ("1. Clinical Quality & CMS HRRP Penalties (26.50% Readmissions)",
-         "487 of 1,838 inpatient stays result in preventable 30-day readmissions, exceeding the 20.00% CMS national benchmark ceiling and triggering severe reimbursement clawback penalties under HRRP.",
-         COLOR_ROSE),
-        ("2. Acute Inpatient Bed Bottlenecks & Boarding (18.04 Days ALOS)",
-         "Prolonged lengths of stay hold 33,160 bed-days occupied, reducing hospital intake velocity, saturating critical care units, and causing emergency department boarding.",
-         COLOR_AMBER),
-        ("3. Payer Under-Reimbursement & Patient Liability ($3.56M Burden)",
-         "Insurers reimburse only 48.16% ($3.31M) of billed claims, shifting $3.56M directly to patient out-of-pocket liability—driving uncompensated care and bad debt write-offs.",
-         COLOR_BLUE_LIGHT)
-    ]
+# ----------------- SLIDE 2 -----------------
+s2 = prs.slides.add_slide(prs.slide_layouts[6])
+set_slide_bg(s2)
+add_header(s2, 'The Healthcare Triple Aim Dilemma & Institutional Challenges', 'Business & Clinical Problem Statement')
 
-    for i, (p_title, p_desc, p_accent) in enumerate(problems):
-        card_top = Inches(1.45 + i * 1.7)
-        card = slide2.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.8), card_top, Inches(6.3), Inches(1.5))
-        card.fill.solid()
-        card.fill.fore_color.rgb = COLOR_CARD_BG
-        card.line.color.rgb = p_accent
-        card.line.width = Pt(1.5)
+col_w = Inches(3.95); gap = Inches(0.24); top_p = Inches(1.2); h_p = Inches(5.45)
 
-        tf = card.text_frame
-        tf.word_wrap = True
-        tf.margin_left = Inches(0.2)
-        tf.margin_top = Inches(0.15)
-        tf.margin_right = Inches(0.2)
+# Card 1
+add_card(s2, Inches(0.5), top_p, col_w, h_p, border_color=COLOR_ROSE, border_width=Pt(1.5))
+tb = s2.shapes.add_textbox(Inches(0.7), top_p + Inches(0.15), col_w - Inches(0.4), h_p - Inches(0.3))
+tf = tb.text_frame; tf.word_wrap = True; tf.vertical_anchor = MSO_ANCHOR.TOP; tf.margin_left = tf.margin_right = tf.margin_top = tf.margin_bottom = 0
+p = tf.paragraphs[0]; p.text = '1. CLINICAL QUALITY & CMS PENALTIES'; p.font.size = Pt(9.0); p.font.bold = True; p.font.color.rgb = COLOR_ROSE; p.space_after = Pt(2)
+p = tf.add_paragraph(); p.text = '26.50% Readmissions'; p.font.size = Pt(16); p.font.bold = True; p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(1)
+p = tf.add_paragraph(); p.text = '(487 of 1,838 Inpatient Stays)'; p.font.size = Pt(8.5); p.font.color.rgb = COLOR_TEXT_MUTED; p.space_after = Pt(6)
+p = tf.add_paragraph(); p.text = '• Regulatory Threat: Under CMS HRRP guidelines, 30-day preventable readmissions exceeding 20% trigger penalties up to 3% of total Medicare reimbursements.'; p.font.size = Pt(8.8); p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(5)
+p = tf.add_paragraph(); p.text = '• Chronic Disease Driver: Heart failure, diabetes, and respiratory conditions in senior cohorts (age 65+) account for over 65% of preventable readmissions.'; p.font.size = Pt(8.8); p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(5)
+p = tf.add_paragraph(); p.text = '• Polypharmacy Risk: 41.0% of elderly chronic patients take >=5 concurrent medications, escalating adverse drug event risks.'; p.font.size = Pt(8.8); p.font.color.rgb = COLOR_TEXT_DARK
 
-        p0 = tf.paragraphs[0]
-        p0.text = p_title
-        p0.font.size = Pt(12)
-        p0.font.bold = True
-        p0.font.color.rgb = COLOR_TEXT_MAIN
-        p0.space_after = Pt(4)
+# Card 2
+add_card(s2, Inches(0.5) + col_w + gap, top_p, col_w, h_p, border_color=COLOR_AMBER, border_width=Pt(1.5))
+tb = s2.shapes.add_textbox(Inches(0.7) + col_w + gap, top_p + Inches(0.15), col_w - Inches(0.4), h_p - Inches(0.3))
+tf = tb.text_frame; tf.word_wrap = True; tf.vertical_anchor = MSO_ANCHOR.TOP; tf.margin_left = tf.margin_right = tf.margin_top = tf.margin_bottom = 0
+p = tf.paragraphs[0]; p.text = '2. ACUTE BED BOTTLENECKS & FLOW'; p.font.size = Pt(9.0); p.font.bold = True; p.font.color.rgb = COLOR_AMBER; p.space_after = Pt(2)
+p = tf.add_paragraph(); p.text = '18.04 Days Inpatient Stay'; p.font.size = Pt(16); p.font.bold = True; p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(1)
+p = tf.add_paragraph(); p.text = '(33,160 Total Bed-Days Occupied)'; p.font.size = Pt(8.5); p.font.color.rgb = COLOR_TEXT_MUTED; p.space_after = Pt(6)
+p = tf.add_paragraph(); p.text = '• Capacity Saturation: Extended stay duration holds acute beds occupied, resulting in emergency room boarding and delayed surgical admissions.'; p.font.size = Pt(8.8); p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(5)
+p = tf.add_paragraph(); p.text = '• Outlier Variance: Statistical anomalies (Z > 2.0) in complex chronic cases drive unpredictable bed hold times without clinical pathway standardization.'; p.font.size = Pt(8.8); p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(5)
+p = tf.add_paragraph(); p.text = '• ED Triage Efficiency: Emergency conversion to inpatient is controlled at 2.34%, proving admissions originate from acute clinical necessity.'; p.font.size = Pt(8.8); p.font.color.rgb = COLOR_TEXT_DARK
 
-        p1 = tf.add_paragraph()
-        p1.text = p_desc
-        p1.font.size = Pt(10)
-        p1.font.color.rgb = COLOR_TEXT_DIM
+# Card 3
+add_card(s2, Inches(0.5) + (col_w + gap)*2, top_p, col_w, h_p, border_color=COLOR_BLUE, border_width=Pt(1.5))
+tb = s2.shapes.add_textbox(Inches(0.7) + (col_w + gap)*2, top_p + Inches(0.15), col_w - Inches(0.4), h_p - Inches(0.3))
+tf = tb.text_frame; tf.word_wrap = True; tf.vertical_anchor = MSO_ANCHOR.TOP; tf.margin_left = tf.margin_right = tf.margin_top = tf.margin_bottom = 0
+p = tf.paragraphs[0]; p.text = '3. PAYER UNDER-REIMBURSEMENT'; p.font.size = Pt(9.0); p.font.bold = True; p.font.color.rgb = COLOR_BLUE; p.space_after = Pt(2)
+p = tf.add_paragraph(); p.text = '.56M Patient OOP Debt'; p.font.size = Pt(16); p.font.bold = True; p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(1)
+p = tf.add_paragraph(); p.text = '(51.84% Total Financial Burden)'; p.font.size = Pt(8.5); p.font.color.rgb = COLOR_TEXT_MUTED; p.space_after = Pt(6)
+p = tf.add_paragraph(); p.text = '• Payer Recovery Gap: Insurers recover only 48.16% (.31M) of .87M gross billed claims, leaving a .56M uncollected shortfall.'; p.font.size = Pt(8.8); p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(5)
+p = tf.add_paragraph(); p.text = '• Uninsured Vulnerability: Uninsured patients face >.3M in direct liabilities, representing the primary driver of hospital uncompensated bad debt.'; p.font.size = Pt(8.8); p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(5)
+p = tf.add_paragraph(); p.text = '• Managed Care Disparities: Significant variance between commercial yields (45%–65%) and government payment formulas.'; p.font.size = Pt(8.8); p.font.color.rgb = COLOR_TEXT_DARK
 
-    if os.path.exists('presentation_assets/triple_aim.jpg'):
-        slide2.shapes.add_picture('presentation_assets/triple_aim.jpg', Inches(7.4), Inches(1.45), width=Inches(5.1))
+add_footer(s2, 'CMS = Centers for Medicare & Medicaid Services | HRRP = Hospital Readmissions Reduction Program | ALOS = Average Length of Stay | OOP = Out-of-Pocket | ED = Emergency Department | RCM = Revenue Cycle Management', 2)
 
-    slide2.notes_slide.notes_text_frame.text = (
-        "Here we outline the 3 core healthcare bottlenecks: First, our 30-day preventable readmission rate is 26.50%, triggering direct CMS financial penalties. "
-        "Second, an average inpatient stay of 18.04 days saturates 33,000 bed days. "
-        "Third, insurers cover only 48.2% of claims, leaving $3.56M as patient out-of-pocket liabilities that drive uncompensated bad debt."
-    )
+# ----------------- SLIDE 3 -----------------
+s3 = prs.slides.add_slide(prs.slide_layouts[6])
+set_slide_bg(s3)
+add_header(s3, 'Production Star Schema Architecture & Master DAX Calculation Engine', 'Relational Modeling & Advanced Analytics Architecture')
 
-    # =========================================================================
-    # SLIDE 3: DATA ARCHITECTURE & MASTER DAX ENGINE
-    # =========================================================================
-    slide3 = prs.slides.add_slide(prs.slide_layouts[6])
-    set_slide_bg(slide3)
-    add_header(slide3, 'Production Star Schema Architecture & Master DAX Engine', 'Enterprise Relational Model', COLOR_BLUE_LIGHT)
+add_card(s3, Inches(0.5), Inches(1.2), Inches(6.0), Inches(5.45))
+tb = s3.shapes.add_textbox(Inches(0.75), Inches(1.35), Inches(5.5), Inches(5.15))
+tf = tb.text_frame; tf.word_wrap = True; tf.vertical_anchor = MSO_ANCHOR.TOP; tf.margin_left = tf.margin_right = tf.margin_top = tf.margin_bottom = 0
+p = tf.paragraphs[0]; p.text = '9-TABLE STAR SCHEMA ARCHITECTURE (1:* RELATIONS)'; p.font.size = Pt(9); p.font.bold = True; p.font.color.rgb = COLOR_BLUE; p.space_after = Pt(3)
+p = tf.add_paragraph(); p.text = 'Normalized Relational Data Model'; p.font.size = Pt(14); p.font.bold = True; p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(6)
 
-    if os.path.exists('presentation_assets/star_schema.jpg'):
-        slide3.shapes.add_picture('presentation_assets/star_schema.jpg', Inches(0.8), Inches(1.45), width=Inches(5.4))
+p = tf.add_paragraph(); p.text = '• Dim_Patients (1,171 Rows): Central patient dimension with demographics, geographic attributes (county, zip, coordinates), and lifetime spend.'; p.font.size = Pt(8.8); p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(4)
+p = tf.add_paragraph(); p.text = '• Dim_Date (39,813 Rows): Master continuous calendar (1912–2020) enabling 100% precise time intelligence (YoY, MoM, and 90-day rolling rates).'; p.font.size = Pt(8.8); p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(4)
+p = tf.add_paragraph(); p.text = '• Fact_Encounters (53,346 Rows): Primary transaction fact linking patients, facilities, providers, payers, dates, and financial metrics.'; p.font.size = Pt(8.8); p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(4)
+p = tf.add_paragraph(); p.text = '• Clinical Sub-Facts: Fact_Conditions (8,376 diagnoses), Fact_Medications (42,989 dispenses), and Fact_Procedures (34,981 procedures).'; p.font.size = Pt(8.8); p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(4)
+p = tf.add_paragraph(); p.text = '• Supporting Dimensions: Dim_Organizations (1,120 facilities), Dim_Providers (1,104 physicians), and Dim_Payers (10 insurance plans).'; p.font.size = Pt(8.8); p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(6)
+p = tf.add_paragraph(); p.text = '- Star Schema Advantage: 100% normalized 1-to-many filter propagation eliminates Cartesian product duplication and guarantees sub-second query execution.'; p.font.size = Pt(8.6); p.font.bold = True; p.font.color.rgb = COLOR_EMERALD
 
-    dax_features = [
-        ("Longitudinal 30-Day Readmission Window (Δt ≤ 30 days)",
-         "Chronologically ordered encounters per patient evaluate sequential inpatient visits within Δt ≤ 30 days of prior discharge.",
-         COLOR_BLUE_LIGHT),
-        ("Charlson Comorbidity Burden Index (CCI)",
-         "Dynamic clinical risk-scoring algorithm (weights 1 to 6) evaluating cardiovascular, diabetes, renal, and oncology chronic disease clusters.",
-         COLOR_AMBER),
-        ("Statistical Length of Stay Z-Score Anomaly Detection",
-         "Dynamic Z = (LOS − μ) / σ formulation flagging statistical stay anomalies (Z > 2.0) directly in visual tooltips.",
-         COLOR_EMERALD_LIGHT),
-        ("Pareto 80/20 High-Utilizer Virtual Table Deciles",
-         "Dynamic patient-level spend concentration calculated via TOPN and SUMX iterators over virtual patient summarization tables.",
-         COLOR_PURPLE)
-    ]
+add_card(s3, Inches(6.7), Inches(1.2), Inches(6.133), Inches(5.45))
+tb = s3.shapes.add_textbox(Inches(6.95), Inches(1.35), Inches(5.633), Inches(5.15))
+tf = tb.text_frame; tf.word_wrap = True; tf.vertical_anchor = MSO_ANCHOR.TOP; tf.margin_left = tf.margin_right = tf.margin_top = tf.margin_bottom = 0
+p = tf.paragraphs[0]; p.text = 'MASTER DAX CALCULATION ENGINE (35+ MEASURES)'; p.font.size = Pt(9); p.font.bold = True; p.font.color.rgb = COLOR_AMBER; p.space_after = Pt(3)
+p = tf.add_paragraph(); p.text = 'Key Mathematical & Clinical Algorithms'; p.font.size = Pt(14); p.font.bold = True; p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(6)
 
-    for i, (df_title, df_desc, df_accent) in enumerate(dax_features):
-        c_top = Inches(1.45 + i * 1.3)
-        card = slide3.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(6.5), c_top, Inches(6.0), Inches(1.18))
-        card.fill.solid()
-        card.fill.fore_color.rgb = COLOR_CARD_BG
-        card.line.color.rgb = df_accent
-        card.line.width = Pt(1.2)
+p = tf.add_paragraph(); p.text = '1. Longitudinal 30-Day Readmission Window:'; p.font.size = Pt(9.2); p.font.bold = True; p.font.color.rgb = COLOR_ROSE; p.space_after = Pt(1)
+p = tf.add_paragraph(); p.text = 'Sequenced encounters chronologically by patient key to evaluate consecutive Inpatient stays where Δt = (Admit Date − Prior Discharge) <= 30 days.'; p.font.size = Pt(8.6); p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(5)
 
-        tf = card.text_frame
-        tf.word_wrap = True
-        tf.margin_left = Inches(0.18)
-        tf.margin_top = Inches(0.12)
-        tf.margin_right = Inches(0.18)
+p = tf.add_paragraph(); p.text = '2. Charlson Comorbidity Burden Index (CCI):'; p.font.size = Pt(9.2); p.font.bold = True; p.font.color.rgb = COLOR_AMBER; p.space_after = Pt(1)
+p = tf.add_paragraph(); p.text = 'Dynamic weighted clinical risk algorithm assigning validated scores (1 to 6) across cardiovascular, diabetic, renal, and oncological chronic conditions.'; p.font.size = Pt(8.6); p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(5)
 
-        p0 = tf.paragraphs[0]
-        p0.text = df_title
-        p0.font.size = Pt(11)
-        p0.font.bold = True
-        p0.font.color.rgb = df_accent
-        p0.space_after = Pt(2)
+p = tf.add_paragraph(); p.text = '3. Statistical Length of Stay Z-Score Anomaly:'; p.font.size = Pt(9.2); p.font.bold = True; p.font.color.rgb = COLOR_BLUE; p.space_after = Pt(1)
+p = tf.add_paragraph(); p.text = 'Formulated Z = (LOS - Mean) / StdDev to isolate inpatient stays exceeding 2 standard deviations (Z > 2.0) directly in visual tooltips.'; p.font.size = Pt(8.6); p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(5)
 
-        p1 = tf.add_paragraph()
-        p1.text = df_desc
-        p1.font.size = Pt(9.5)
-        p1.font.color.rgb = COLOR_TEXT_DIM
+p = tf.add_paragraph(); p.text = '4. Pareto 80/20 High-Utilizer Spend Deciles:'; p.font.size = Pt(9.2); p.font.bold = True; p.font.color.rgb = COLOR_PURPLE; p.space_after = Pt(1)
+p = tf.add_paragraph(); p.text = 'Iterates virtual patient tables using TOPN and SUMX to evaluate healthcare wealth and cost concentration curves across demographic cohorts.'; p.font.size = Pt(8.6); p.font.color.rgb = COLOR_TEXT_DARK
 
-    slide3.notes_slide.notes_text_frame.text = (
-        "For our data architecture, we strictly avoided flat-table merges which cause severe Cartesian duplication. "
-        "We normalized the Synthea repository into 9 tables centered on Dim_Patients with active 1-to-many relationships. "
-        "Our master DAX engine incorporates longitudinal 30-day readmission window calculations, Charlson Comorbidity risk weighting, and statistical Z-score outlier detection."
-    )
+add_footer(s3, 'PK = Primary Key | FK = Foreign Key | CCI = Charlson Comorbidity Index | ALOS = Average Length of Stay | DAX = Data Analysis Expressions | VertiPaq = Power BI Analytics Engine', 3)
 
-    # =========================================================================
-    # SLIDES 4 - 8: DASHBOARD VIEWS
-    # =========================================================================
-    dashboards_data = [
-        # Slide 4: C-Suite
-        ("Dashboard 1: C-Suite Executive Command Center",
-         "CEO & CFO Macro Governance",
-         COLOR_BLUE_LIGHT,
-         "presentation_assets/dashboard_page1.png",
-         [("Total Gross Billed Claims", "$6,868,312.95", "53,346 Encounters across 1,171 Patients", COLOR_TEXT_MAIN),
-          ("Payer Collections vs OOP", "$3.31M (48.2%) vs $3.56M (51.8%)", "Payer Recovery Yield vs Patient Liability", COLOR_AMBER)],
-         "Strategic Takeaway for CEO / CFO:\n"
-         "The revenue waterfall confirms acute vulnerability: over half of all billed claims rest on patient direct liability, creating major exposure to bad-debt write-offs without upfront financial counseling and proactive payer contracting.",
-         "Dashboard 1 serves the CEO and CFO. At a glance, leadership sees our $6.87M gross billed claims, $3.31M collected from payers, and macro quality governance. The revenue waterfall and decomposition tree reveal how money flows from inpatient and emergency encounters down to individual clinical specialties."),
-        
-        # Slide 5: CMO
-        ("Dashboard 2: Clinical Quality & Comorbidity Intelligence",
-         "Chief Medical Officer (CMO) Persona",
-         COLOR_ROSE,
-         "presentation_assets/dashboard_page2.png",
-         [("30-Day Readmission Rate", "487 Cases (26.50%)", "CMS HRRP National Ceiling: < 20.00%", COLOR_ROSE),
-          ("Senior Polypharmacy Rate", "41.0% (≥ 5 Prescriptions)", "200 Readmissions concentrated in Age 65+", COLOR_AMBER)],
-         "Clinical Quality Findings for CMO:\n"
-         "• Cardiovascular & Endocrine: Dominate high-volume, high-penalty risk quadrants (over 65% of preventable readmissions).\n"
-         "• Polypharmacy Correlation: Senior patients with 5+ concurrent prescriptions experience 2.4x higher readmission probability.",
-         "Dashboard 2 is tailored for the Chief Medical Officer. The 4-quadrant scatter plot highlights clinical specialties exceeding the 20% readmission penalty threshold. We discover that heart failure and diabetic patients over age 65 represent the vast majority of preventable returns, strongly correlated with polypharmacy."),
-        
-        # Slide 6: COO
-        ("Dashboard 3: Hospital Operations & Inpatient Throughput Hub",
-         "Chief Operating Officer (COO) Persona",
-         COLOR_AMBER,
-         "presentation_assets/dashboard_page3.png",
-         [("Inpatient ALOS", "18.04 Days", "33,160 Acute Bed-Days Occupied", COLOR_AMBER),
-          ("ED-to-Inpatient Conversion", "2.34% (49 / 2,090)", "Benchmark Ceiling: < 5.00% (High Triage Efficiency)", COLOR_EMERALD_LIGHT)],
-         "Operational Insights for Bed Managers:\n"
-         "• High Triage Velocity: Low 2.34% ED conversion rate demonstrates non-acute cases are effectively resolved without bed saturation.\n"
-         "• Discharge Rounding Opportunity: Standardizing daily rounds can reduce stay by 2.5 days, freeing 4,500 bed-days (+15% capacity).",
-         "Dashboard 3 gives the COO real-time visibility into bed occupancy and physician workload. Notice our Emergency-to-Inpatient conversion rate is 2.34%, proving our ED effectively triages and discharges non-acute cases. Standardizing discharge rounds will reduce average stay by 2.5 days, freeing 4,500 bed-days."),
-        
-        # Slide 7: RCM
-        ("Dashboard 4: Revenue Cycle Management & Payer Performance",
-         "VP of Managed Care & RCM Persona",
-         COLOR_EMERALD_LIGHT,
-         "presentation_assets/dashboard_page4.png",
-         [("Payer Recovery Yield", "$3.31M (48.16%)", "Commercial Yields Range from 45% to 65%", COLOR_EMERALD_LIGHT),
-          ("Uncollected Patient Gap", "$3.56M (51.84%)", "Uninsured Population Drives > $1.3M Liability", COLOR_ROSE)],
-         "Managed Care Contract Findings:\n"
-         "• High-Cost Procedural Outliers: Surgical procedures and diagnostic imaging drive the highest unit costs (> $5,000).\n"
-         "• Rolling Trend: Longitudinal 90-day rolling collections stabilized near ~53% following managed care renegotiation.",
-         "Dashboard 4 equips Managed Care negotiators with contract yield benchmarks. We identify a $3.56M under-reimbursement gap, with uninsured patients bearing over $1.3M in direct liabilities. High-cost surgical procedures exceeding $5,000 are isolated for priority contract renegotiation."),
-        
-        # Slide 8: PopHealth
-        ("Dashboard 5: Population Health, Geographic Hotspots & SDoH",
-         "Chief Population Health Officer Persona",
-         COLOR_PURPLE,
-         "presentation_assets/dashboard_page5.png",
-         [("Chronic Disease Prevalence", "94.0% of Cohort", "1,101 of 1,171 Diagnosed with Chronic Condition", COLOR_PURPLE),
-          ("High-Utilizer Spend Share", "39.73% (Top 10%)", "Pareto Concentration in Age 51+ Demographic", COLOR_AMBER)],
-         "Epidemiological & SDoH Findings:\n"
-         "• Geographic Hotspots: Middlesex and Worcester counties represent > 34% of the chronic condition burden.\n"
-         "• Wellness Clinic Opportunity: Screening adherence at 35.82% highlights opportunity for preventive community intervention.",
-         "Dashboard 5 provides our Chief Population Health Officer with county-level GIS disease density. Middlesex and Worcester counties emerge as chronic hotspots. Furthermore, our 100% stacked chart reveals clear age clustering: pediatric cohorts suffer primarily from asthma, while seniors bear severe cardiovascular diseases.")
-    ]
+# ----------------- SLIDES 4-8: Dashboards 1 to 5 -----------------
+dash_data = [
+    (4, 'Dashboard 1: C-Suite Executive Command Center', 'C-Suite Leadership • CEO & CFO Governance Persona', 'presentation_assets/dashboard_page1.png',
+     'C-SUITE REVENUE VELOCITY & GOVERNANCE',
+     ',868,312.95', 'Gross Billed Claims', '53,346 Encounters across 1,171 Patients',
+     ',307,391.57', 'Payer Collections', '48.16% Insurance Recovery Yield',
+     [
+         '• Macro Governance: Gives executive leadership immediate visibility into gross revenue trajectory, patient volume growth, and clinical readmission risk.',
+         '• Revenue Waterfall Dynamics: Traces claim flow from gross billed (.87M) through payer reimbursement (.31M) to patient out-of-pocket exposure (.56M).',
+         '• Decomposition Tree Root-Cause: Enables drill-down of billed revenue across Encounter Classes (Wellness vs Inpatient), Clinical Categories, and Payer Types.',
+         '• Strategic Takeaway: 51.84% patient financial liability represents significant exposure to bad-debt write-offs without proactive financial counseling.'
+     ],
+     'CEO = Chief Executive Officer | CFO = Chief Financial Officer | OOP = Out-of-Pocket | RCM = Revenue Cycle Management | YoY = Year-Over-Year | MoM = Month-Over-Month'),
 
-    for title, cat, accent_c, img_path, kpi_list, takeaway_text, notes_str in dashboards_data:
-        s = prs.slides.add_slide(prs.slide_layouts[6])
-        set_slide_bg(s)
-        add_header(s, title, cat, accent_c)
+    (5, 'Dashboard 2: Clinical Quality & Comorbidity Intelligence', 'Clinical Quality Board • Chief Medical Officer (CMO) Persona', 'presentation_assets/dashboard_page2.png',
+     '30-DAY READMISSIONS & CLINICAL RISK STRATIFICATION',
+     '487 Readmissions', 'Inpatient 30D Return', '26.50% Rate (Target: < 20.00%)',
+     '41.0% Cohort', 'Polypharmacy Rate', '>= 5 Concurrent Active Rx Dispenses',
+     [
+         '• Readmission 4-Quadrant Matrix: Pinpoints clinical specialties in the high-volume, high-penalty quadrant exceeding the 20% CMS penalty threshold.',
+         '• Chronic Disease Clustering: Cardiovascular & Circulatory and Endocrine & Diabetes represent over 65% of all active chronic disease diagnoses.',
+         '• Senior Polypharmacy Risk: Patients aged 65+ account for 200 out of 487 readmissions, strongly correlated with high medication burden.',
+         '• Strategic Clinical Protocol: Deploying Transition Care Management (TCM) 48-hr nurse follow-ups for patients with Charlson Index >= 3 targets a 20% readmission reduction.'
+     ],
+     'CMO = Chief Medical Officer | HRRP = Hospital Readmissions Reduction Program | CCI = Charlson Comorbidity Index | Rx = Prescription / Drug | TCM = Transition Care Management'),
 
-        if os.path.exists(img_path):
-            s.shapes.add_picture(img_path, Inches(0.8), Inches(1.45), width=Inches(7.2))
+    (6, 'Dashboard 3: Hospital Operations & Inpatient Throughput Hub', 'Hospital Operations • Chief Operating Officer (COO) Persona', 'presentation_assets/dashboard_page3.png',
+     'ACUTE BED CAPACITY & DISCHARGE FLOW',
+     '18.04 Days', 'Inpatient ALOS', '33,160 Total Bed-Days Occupied',
+     '2.34% Conversion', 'ED-to-Inpatient Rate', '49 / 2,090 Visits (Benchmark: < 5.0%)',
+     [
+         '• Inpatient Stay Duration: Average stay of 18.04 days represents an acute operational opportunity to eliminate discharge bottlenecks.',
+         '• Emergency Triage Velocity: A 2.34% ED-to-inpatient conversion rate confirms excellent emergency room triage, resolving non-emergent visits without clogging inpatient beds.',
+         '• Physician & Facility Throughput: Tracks patient volume vs stay duration across 1,120 facilities (VA Boston, Worcester) and attending physicians.',
+         '• Strategic Operational Protocol: Standardized clinical discharge rounds can reduce stay duration by 2.5 days, freeing 4,500 bed-days (+15% acute capacity).'
+     ],
+     'COO = Chief Operating Officer | ALOS = Average Length of Stay | ED = Emergency Department | LOS = Length of Stay | VA = Veterans Affairs | Z-Score = Standard Deviation Anomaly'),
 
-        # Right sidebar cards
-        for j, (kpi_t, kpi_v, kpi_s, kpi_c) in enumerate(kpi_list):
-            box_top = Inches(1.45 + j * 1.35)
-            box = s.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(8.3), box_top, Inches(4.2), Inches(1.2))
-            box.fill.solid()
-            box.fill.fore_color.rgb = COLOR_CARD_BG
-            box.line.color.rgb = COLOR_CARD_BORDER
-            
-            tf_b = box.text_frame
-            tf_b.word_wrap = True
-            tf_b.margin_left = Inches(0.18)
-            tf_b.margin_top = Inches(0.12)
-            tf_b.margin_right = Inches(0.18)
-            
-            p0 = tf_b.paragraphs[0]
-            p0.text = kpi_t
-            p0.font.size = Pt(10)
-            p0.font.color.rgb = COLOR_TEXT_MUTED
-            
-            p1 = tf_b.add_paragraph()
-            p1.text = kpi_v
-            p1.font.size = Pt(14)
-            p1.font.bold = True
-            p1.font.color.rgb = kpi_c
-            
-            p2 = tf_b.add_paragraph()
-            p2.text = kpi_s
-            p2.font.size = Pt(8.5)
-            p2.font.color.rgb = COLOR_TEXT_DIM
+    (7, 'Dashboard 4: Revenue Cycle Management & Payer Performance', 'Managed Care Relations • VP of Revenue Cycle (RCM) Persona', 'presentation_assets/dashboard_page4.png',
+     'PAYER RECOVERY & PATIENT DEBT LIABILITY',
+     ',560,921.38', 'Under-Reimbursement', '51.84% Uncollected Insurance Shortfall',
+     '.30M+ Exposure', 'Uninsured Patient Debt', 'NO_INSURANCE Plan Liability',
+     [
+         '• Payer Contract Under-Reimbursement: Reveals significant variance in reimbursement ratios between commercial payers (45%–65%) and government plans.',
+         '• Uninsured Bad-Debt Driver: Patients without insurance coverage account for over .3M in direct liabilities, driving hospital uncompensated care.',
+         '• High-Cost Procedural Margins: Surgical and specialized diagnostic imaging procedures account for the highest unit costs (> ,000).',
+         '• Strategic Financial Protocol: Upfront financial counseling desks and prior authorization reviews accelerate cash collection by 14 days and cut bad debt by ,000/year.'
+     ],
+     'RCM = Revenue Cycle Management | OOP = Out-of-Pocket | MA = Massachusetts | Commercial = Private Health Insurers | Medicare = Federal Elder Insurance | Medicaid = State Assistance'),
 
-        # Strategic takeaway box
-        t_box = s.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(8.3), Inches(4.3), Inches(4.2), Inches(2.35))
-        t_box.fill.solid()
-        t_box.fill.fore_color.rgb = COLOR_CARD_BG
-        t_box.line.color.rgb = accent_c
-        t_box.line.width = Pt(1.2)
-        
-        tf_t = t_box.text_frame
-        tf_t.word_wrap = True
-        tf_t.margin_left = Inches(0.18)
-        tf_t.margin_top = Inches(0.15)
-        tf_t.margin_right = Inches(0.18)
-        
-        p_t0 = tf_t.paragraphs[0]
-        p_t0.text = "Executive Strategic Takeaway"
-        p_t0.font.size = Pt(11)
-        p_t0.font.bold = True
-        p_t0.font.color.rgb = accent_c
-        p_t0.space_after = Pt(4)
-        
-        p_t1 = tf_t.add_paragraph()
-        p_t1.text = takeaway_text
-        p_t1.font.size = Pt(9.5)
-        p_t1.font.color.rgb = COLOR_TEXT_MAIN
+    (8, 'Dashboard 5: Population Health, Geographic Hotspots & SDoH', 'Epidemiology & Community Care • Chief PopHealth Officer Persona', 'presentation_assets/dashboard_page5.png',
+     'GEOGRAPHIC DENSITY & SDOH HEALTH EQUITY',
+     '94.0% Cohort', 'Chronic Prevalence', 'Diagnosed with >= 1 Chronic Condition',
+     '39.73% Spend', 'Top 10% High Utilizers', 'Pareto 80/20 Cost Concentration',
+     [
+         '• Geographic Disease Clustering: Middlesex and Worcester counties represent over 34% of the aggregate chronic disease burden across Massachusetts.',
+         '• Age Demographics & Chronic Burden: High-utilizer spend concentration accelerates above age 51, while pediatric cohorts present predominantly with asthma.',
+         '• SDoH Health Equity Donut: Quantifies patient demographic equity across racial and ethnic groups to identify vulnerable populations.',
+         '• Strategic PopHealth Protocol: Preventative wellness visit adherence is 35.82%, highlighting an opportunity to deploy mobile clinics and community health workers.'
+     ],
+     'PopHealth = Population Health | SDoH = Social Determinants of Health | GIS = Geographic Information System | Pareto = 80/20 Cost Concentration Curve | RxNorm = National Drug Code Standard')
+]
 
-        s.notes_slide.notes_text_frame.text = notes_str
+for s_num, title, cat_tag, img_file, kpi_head, m1_val, m1_lbl, m1_sub, m2_val, m2_lbl, m2_sub, bullet_list, glossary in dash_data:
+    s = prs.slides.add_slide(prs.slide_layouts[6])
+    set_slide_bg(s)
+    add_header(s, title, cat_tag)
+    
+    # Left: Dashboard Screenshot Box
+    add_card(s, Inches(0.5), Inches(1.2), Inches(7.5), Inches(5.45))
+    if os.path.exists(img_file):
+        s.shapes.add_picture(img_file, Inches(0.6), Inches(1.3), width=Inches(7.3))
+    
+    # Right: Analytical Insight Card
+    add_card(s, Inches(8.15), Inches(1.2), Inches(4.683), Inches(5.45))
+    tb = s.shapes.add_textbox(Inches(8.35), Inches(1.35), Inches(4.283), Inches(5.15))
+    tf = tb.text_frame; tf.word_wrap = True; tf.vertical_anchor = MSO_ANCHOR.TOP
+    tf.margin_left = tf.margin_right = tf.margin_top = tf.margin_bottom = 0
+    
+    p = tf.paragraphs[0]; p.text = kpi_head; p.font.size = Pt(8.5); p.font.bold = True; p.font.color.rgb = COLOR_BLUE; p.space_after = Pt(2)
+    p = tf.add_paragraph(); p.text = 'Key Executive & Clinical Findings'; p.font.size = Pt(12.5); p.font.bold = True; p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(5)
+    
+    p = tf.add_paragraph(); p.text = f'• {m1_lbl}: {m1_val}'; p.font.size = Pt(9.2); p.font.bold = True; p.font.color.rgb = COLOR_AMBER
+    p = tf.add_paragraph(); p.text = f'  ({m1_sub})'; p.font.size = Pt(8.2); p.font.color.rgb = COLOR_TEXT_MUTED; p.space_after = Pt(2)
+    
+    p = tf.add_paragraph(); p.text = f'• {m2_lbl}: {m2_val}'; p.font.size = Pt(9.2); p.font.bold = True; p.font.color.rgb = COLOR_BLUE
+    p = tf.add_paragraph(); p.text = f'  ({m2_sub})'; p.font.size = Pt(8.2); p.font.color.rgb = COLOR_TEXT_MUTED; p.space_after = Pt(5)
+    
+    for bullet in bullet_list:
+        p = tf.add_paragraph(); p.text = bullet; p.font.size = Pt(8.4); p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(3)
+    
+    add_footer(s, glossary, s_num)
 
-    # =========================================================================
-    # SLIDE 9: STRATEGIC RECOMMENDATIONS & QUANTIFIED ROI
-    # =========================================================================
-    slide9 = prs.slides.add_slide(prs.slide_layouts[6])
-    set_slide_bg(slide9)
-    add_header(slide9, 'Strategic Recommendations & Quantified ROI ($430K+ Net Annual Impact)', 'Business Impact & Clinical Action Plan', COLOR_EMERALD_LIGHT)
+# ----------------- SLIDE 9 -----------------
+s9 = prs.slides.add_slide(prs.slide_layouts[6])
+set_slide_bg(s9)
+add_header(s9, 'Strategic Clinical Protocols & Quantified Financial ROI (,000+ Net Annual Savings)', 'Clinical Action Plan & Financial Impact Model')
 
-    recs = [
-        ("1. Transition Care Management (TCM) Protocol",
-         "+$280,000 / Year Savings",
-         "Deploy mandatory 48-hour nurse telephonic follow-ups and 7-day outpatient clinic visits for high-risk patients (Charlson Index ≥ 3). A 20% readmission reduction saves $280K annually in CMS penalties and uncompensated care.",
-         COLOR_EMERALD_LIGHT),
-        ("2. Standardized Clinical Discharge Pathways",
-         "+4,500 Bed-Days Unlocked",
-         "Standardize daily multidisciplinary discharge rounds to reduce Inpatient ALOS by 2.5 days—freeing 4,500 acute bed-days (+15% surgical throughput capacity) without expanding physical brick-and-mortar facilities.",
-         COLOR_BLUE_LIGHT),
-        ("3. Upfront Financial Counseling & Coverage Desk",
-         "+$150,000 / Year Recovery",
-         "Enroll uninsured and under-insured patients into Medicaid or sliding-scale coverage prior to discharge, accelerating cash collection by 14 days and eliminating $150K in preventable bad debt write-offs.",
-         COLOR_AMBER)
-    ]
+c_w = Inches(3.95); c_gap = Inches(0.24); top_p = Inches(1.2); h_p = Inches(3.95)
 
-    for i, (r_title, r_badge, r_desc, r_accent) in enumerate(recs):
-        c_top = Inches(1.45 + i * 1.7)
-        card = slide9.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.8), c_top, Inches(6.3), Inches(1.5))
-        card.fill.solid()
-        card.fill.fore_color.rgb = COLOR_CARD_BG
-        card.line.color.rgb = r_accent
-        card.line.width = Pt(1.5)
+# Protocol 1
+add_card(s9, Inches(0.5), top_p, c_w, h_p, border_color=COLOR_EMERALD, border_width=Pt(1.5))
+tb = s9.shapes.add_textbox(Inches(0.7), top_p + Inches(0.15), c_w - Inches(0.4), h_p - Inches(0.3))
+tf = tb.text_frame; tf.word_wrap = True; tf.vertical_anchor = MSO_ANCHOR.TOP; tf.margin_left = tf.margin_right = tf.margin_top = tf.margin_bottom = 0
+p = tf.paragraphs[0]; p.text = '1. TRANSITION CARE MANAGEMENT'; p.font.size = Pt(8.8); p.font.bold = True; p.font.color.rgb = COLOR_EMERALD; p.space_after = Pt(2)
+p = tf.add_paragraph(); p.text = '+,000 / Year'; p.font.size = Pt(15); p.font.bold = True; p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(1)
+p = tf.add_paragraph(); p.text = 'CMS Penalty Avoidance & Recovery'; p.font.size = Pt(8.2); p.font.color.rgb = COLOR_TEXT_MUTED; p.space_after = Pt(5)
+p = tf.add_paragraph(); p.text = '• Action Protocol: Introduce mandatory 48-hour post-discharge nurse follow-up calls and 7-day primary clinic visits for high-risk patients (Charlson Comorbidity Index >= 3).'; p.font.size = Pt(8.4); p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(4)
+p = tf.add_paragraph(); p.text = '• Target Outcome: A 20% reduction in preventable 30-day readmissions avoids ~,000 in CMS penalty deductions and uncompensated care expenses.'; p.font.size = Pt(8.4); p.font.color.rgb = COLOR_TEXT_DARK
 
-        tf = card.text_frame
-        tf.word_wrap = True
-        tf.margin_left = Inches(0.2)
-        tf.margin_top = Inches(0.15)
-        tf.margin_right = Inches(0.2)
+# Protocol 2
+add_card(s9, Inches(0.5) + c_w + c_gap, top_p, c_w, h_p, border_color=COLOR_BLUE, border_width=Pt(1.5))
+tb = s9.shapes.add_textbox(Inches(0.7) + c_w + c_gap, top_p + Inches(0.15), c_w - Inches(0.4), h_p - Inches(0.3))
+tf = tb.text_frame; tf.word_wrap = True; tf.vertical_anchor = MSO_ANCHOR.TOP; tf.margin_left = tf.margin_right = tf.margin_top = tf.margin_bottom = 0
+p = tf.paragraphs[0]; p.text = '2. DISCHARGE CARE PATHWAYS'; p.font.size = Pt(8.8); p.font.bold = True; p.font.color.rgb = COLOR_BLUE; p.space_after = Pt(2)
+p = tf.add_paragraph(); p.text = '+4,500 Bed-Days'; p.font.size = Pt(15); p.font.bold = True; p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(1)
+p = tf.add_paragraph(); p.text = '+15% Acute Intake Capacity'; p.font.size = Pt(8.2); p.font.color.rgb = COLOR_TEXT_MUTED; p.space_after = Pt(5)
+p = tf.add_paragraph(); p.text = '• Action Protocol: Institute standardized multidisciplinary daily discharge planning rounds across surgical and acute inpatient wards.'; p.font.size = Pt(8.4); p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(4)
+p = tf.add_paragraph(); p.text = '• Target Outcome: Decreasing average stay from 18.04 to 15.5 days frees 4,500 acute bed-days, increasing high-margin surgical intake capacity without expanding physical hospital beds.'; p.font.size = Pt(8.4); p.font.color.rgb = COLOR_TEXT_DARK
 
-        p0 = tf.paragraphs[0]
-        p0.text = f"{r_title}  [{r_badge}]"
-        p0.font.size = Pt(11.5)
-        p0.font.bold = True
-        p0.font.color.rgb = r_accent
-        p0.space_after = Pt(4)
+# Protocol 3
+add_card(s9, Inches(0.5) + (c_w + c_gap)*2, top_p, c_w, h_p, border_color=COLOR_AMBER, border_width=Pt(1.5))
+tb = s9.shapes.add_textbox(Inches(0.7) + (c_w + c_gap)*2, top_p + Inches(0.15), c_w - Inches(0.4), h_p - Inches(0.3))
+tf = tb.text_frame; tf.word_wrap = True; tf.vertical_anchor = MSO_ANCHOR.TOP; tf.margin_left = tf.margin_right = tf.margin_top = tf.margin_bottom = 0
+p = tf.paragraphs[0]; p.text = '3. FINANCIAL COUNSELING DESK'; p.font.size = Pt(8.8); p.font.bold = True; p.font.color.rgb = COLOR_AMBER; p.space_after = Pt(2)
+p = tf.add_paragraph(); p.text = '+,000 / Year'; p.font.size = Pt(15); p.font.bold = True; p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(1)
+p = tf.add_paragraph(); p.text = 'Bad-Debt Mitigation & Velocity'; p.font.size = Pt(8.2); p.font.color.rgb = COLOR_TEXT_MUTED; p.space_after = Pt(5)
+p = tf.add_paragraph(); p.text = '• Action Protocol: Establish an upfront patient financial advocacy desk to enroll uninsured and under-insured patients into Medicaid/sliding-scale coverage prior to discharge.'; p.font.size = Pt(8.4); p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(4)
+p = tf.add_paragraph(); p.text = '• Target Outcome: Accelerates cash collection by 14 days and lowers uncompensated bad-debt write-offs by ,000 annually.'; p.font.size = Pt(8.4); p.font.color.rgb = COLOR_TEXT_DARK
 
-        p1 = tf.add_paragraph()
-        p1.text = r_desc
-        p1.font.size = Pt(9.5)
-        p1.font.color.rgb = COLOR_TEXT_DIM
+# Bottom Summary Card
+add_card(s9, Inches(0.5), Inches(5.3), Inches(12.333), Inches(1.35), border_color=COLOR_BLUE, border_width=Pt(1.5))
+tb = s9.shapes.add_textbox(Inches(0.7), Inches(5.42), Inches(11.933), Inches(1.1))
+tf = tb.text_frame; tf.word_wrap = True; tf.vertical_anchor = MSO_ANCHOR.TOP; tf.margin_left = tf.margin_right = tf.margin_top = tf.margin_bottom = 0
+p = tf.paragraphs[0]; p.text = 'TOTAL INSTITUTIONAL NET ROI: ,000+ ANNUALLY + 4,500 ACUTE BED-DAYS UNLOCKED'; p.font.size = Pt(10.5); p.font.bold = True; p.font.color.rgb = COLOR_BLUE; p.space_after = Pt(3)
+p = tf.add_paragraph(); p.text = 'Implementing these three targeted protocols closes the hospital operational throughput and financial leakage loop: avoiding CMS quality penalties (,000), increasing surgical intake capacity (+15%), and converting uncompensated patient medical debt into active payer recoveries (,000).'; p.font.size = Pt(8.6); p.font.color.rgb = COLOR_TEXT_DARK
 
-    if os.path.exists('presentation_assets/roi_strategy.jpg'):
-        slide9.shapes.add_picture('presentation_assets/roi_strategy.jpg', Inches(7.4), Inches(1.45), width=Inches(5.1))
+add_footer(s9, 'ROI = Return on Investment | TCM = Transition Care Management | CMS = Centers for Medicare & Medicaid Services | CCI = Charlson Comorbidity Index | ALOS = Average Length of Stay', 9)
 
-    slide9.notes_slide.notes_text_frame.text = (
-        "Based on these findings, we propose 3 concrete protocols delivering over $430,000 in net annual ROI: "
-        "First, a 48-hour Transition Care Management follow-up saves $280K in CMS penalties. "
-        "Second, standardized clinical discharge pathways free 4,500 bed-days. "
-        "Third, an upfront financial counseling desk cuts bad debt by $150K."
-    )
+# ----------------- SLIDE 10 -----------------
+s10 = prs.slides.add_slide(prs.slide_layouts[6])
+set_slide_bg(s10)
+add_header(s10, 'Data Governance, HIPAA Security & Viva Defense Talking Points', 'Governance & Evaluator FAQ Matrix')
 
-    # =========================================================================
-    # SLIDE 10: GOVERNANCE, CONCLUSION & VIVA DEFENSE (3 VISUAL CARD BOXES)
-    # =========================================================================
-    slide10 = prs.slides.add_slide(prs.slide_layouts[6])
-    set_slide_bg(slide10)
-    add_header(slide10, 'Data Governance, Security & Viva Defense Talking Points', 'Governance & Evaluator FAQ', COLOR_BLUE_LIGHT)
+# Top Banner
+add_card(s10, Inches(0.5), Inches(1.2), Inches(12.333), Inches(0.95))
+tb = s10.shapes.add_textbox(Inches(0.7), Inches(1.28), Inches(11.933), Inches(0.8))
+tf = tb.text_frame; tf.word_wrap = True; tf.vertical_anchor = MSO_ANCHOR.TOP; tf.margin_left = tf.margin_right = tf.margin_top = tf.margin_bottom = 0
+p = tf.paragraphs[0]; p.text = 'ENTERPRISE DATA GOVERNANCE & PRIVACY COMPLIANCE'; p.font.size = Pt(8.8); p.font.bold = True; p.font.color.rgb = COLOR_EMERALD; p.space_after = Pt(2)
+p = tf.add_paragraph(); p.text = '• HIPAA Safe Harbor Privacy: All patient records de-identified via cryptographic hashing of direct identifiers (SSN, phone, address).
+• Role-Based Access Control (RLS): Power BI Row-Level Security restricts clinical quality metrics to CMO role, high-level financials to C-Suite, and billing data to RCM.'; p.font.size = Pt(8.4); p.font.color.rgb = COLOR_TEXT_DARK
 
-    # 3 Distinct Visual Card Boxes for Q1, Q2, and Q3 with bold colored headers
-    viva_cards = [
-        ("Q1: Star Schema vs Flat Table",
-         "Why did you choose a Star Schema over a single flat table?",
-         "A flat table merging 53,346 encounters with multiple diagnoses and medications creates massive Cartesian product duplication—inflating financial sums by 3x–5x.\n\n"
-         "• 100% Normalized Architecture with single-direction 1:N filter propagation.\n"
-         "• Optimal VertiPaq Columnar Compression reduces memory footprint.\n"
-         "• Sub-Second DAX Aggregation across 39,813 date rows in Dim_Date.",
-         COLOR_BLUE_LIGHT,
-         COLOR_BLUE),
-        
-        ("Q2: 30-Day Readmission Logic",
-         "How did you formulate 30-day readmissions without a raw flag?",
-         "Engineered a longitudinal window calculation sorting encounters chronologically by patient key, validating consecutive inpatient stays, and evaluating if:\n\n"
-         "• Δt ≤ 30 days: (Current Admission Date − Prior Inpatient Discharge Date).\n"
-         "• Strict EARLIER / FILTER Isolation to prevent cross-patient bleeding.\n"
-         "• Benchmark Validation: Quantifies exact 26.50% rate against CMS 20% ceiling.",
-         COLOR_AMBER,
-         COLOR_AMBER),
-        
-        ("Q3: Enterprise Analytical Rigor",
-         "What makes this analytics platform truly enterprise-grade?",
-         "Rather than superficial summaries, the platform delivers 5 role-specific executive dashboards with embedded statistical rigor:\n\n"
-         "• Charlson Comorbidity Index (CCI) weighted clinical risk scoring (1 to 6).\n"
-         "• Statistical Z-Score Outlier Flagging: Z = (LOS − μ) / σ (anomalies > 2.0).\n"
-         "• HIPAA Safe Harbor de-identification & dynamic Row-Level Security (RLS).",
-         COLOR_EMERALD_LIGHT,
-         COLOR_EMERALD)
-    ]
+# 3 FAQ Cards
+top_q = Inches(2.3); h_q = Inches(4.35)
 
-    card_w = Inches(3.68)
-    card_gap = Inches(0.34)
-    card_y = Inches(1.45)
-    card_h = Inches(4.7)
+# Q1
+add_card(s10, Inches(0.5), top_q, c_w, h_q, border_color=COLOR_BLUE, border_width=Pt(1.5))
+tb = s10.shapes.add_textbox(Inches(0.7), top_q + Inches(0.15), c_w - Inches(0.4), h_q - Inches(0.3))
+tf = tb.text_frame; tf.word_wrap = True; tf.vertical_anchor = MSO_ANCHOR.TOP; tf.margin_left = tf.margin_right = tf.margin_top = tf.margin_bottom = 0
+p = tf.paragraphs[0]; p.text = 'Q1: STAR SCHEMA VS FLAT TABLE?'; p.font.size = Pt(9.0); p.font.bold = True; p.font.color.rgb = COLOR_BLUE; p.space_after = Pt(2)
+p = tf.add_paragraph(); p.text = 'Data Model Integrity'; p.font.size = Pt(11.5); p.font.bold = True; p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(5)
+p = tf.add_paragraph(); p.text = 'Evaluator Question: Why normalize into a Star Schema instead of importing a single flat table?'; p.font.size = Pt(8.5); p.font.bold = True; p.font.color.rgb = COLOR_TEXT_MUTED; p.space_after = Pt(4)
+p = tf.add_paragraph(); p.text = 'Defense Answer: A flat table merging 53k encounters with multiple diagnoses and medications creates severe Cartesian product duplication, multiplying claim sums by 3x–5x. The Star Schema ensures 100% normalization, optimal VertiPaq columnar compression, and sub-second DAX query execution.'; p.font.size = Pt(8.3); p.font.color.rgb = COLOR_TEXT_DARK
 
-    for i, (q_tag, q_question, q_answer, header_col, border_col) in enumerate(viva_cards):
-        cx = Inches(0.8 + i * (3.68 + 0.34))
-        
-        # Background card shape
-        card_shape = slide10.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, cx, card_y, card_w, card_h)
-        card_shape.fill.solid()
-        card_shape.fill.fore_color.rgb = COLOR_CARD_BG
-        card_shape.line.color.rgb = border_col
-        card_shape.line.width = Pt(2.0)
-        
-        # Header Badge Shape inside card
-        badge = slide10.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, cx + Inches(0.18), card_y + Inches(0.18), card_w - Inches(0.36), Inches(0.55))
-        badge.fill.solid()
-        badge.fill.fore_color.rgb = COLOR_BG
-        badge.line.color.rgb = border_col
-        badge.line.width = Pt(1.0)
-        
-        tf_badge = badge.text_frame
-        tf_badge.word_wrap = True
-        tf_badge.margin_left = tf_badge.margin_right = Inches(0.1)
-        tf_badge.vertical_anchor = MSO_ANCHOR.MIDDLE
-        p_badge = tf_badge.paragraphs[0]
-        p_badge.text = q_tag.upper()
-        p_badge.font.size = Pt(11)
-        p_badge.font.bold = True
-        p_badge.font.color.rgb = header_col
-        p_badge.alignment = PP_ALIGN.CENTER
+# Q2
+add_card(s10, Inches(0.5) + c_w + c_gap, top_q, c_w, h_q, border_color=COLOR_AMBER, border_width=Pt(1.5))
+tb = s10.shapes.add_textbox(Inches(0.7) + c_w + c_gap, top_q + Inches(0.15), c_w - Inches(0.4), h_q - Inches(0.3))
+tf = tb.text_frame; tf.word_wrap = True; tf.vertical_anchor = MSO_ANCHOR.TOP; tf.margin_left = tf.margin_right = tf.margin_top = tf.margin_bottom = 0
+p = tf.paragraphs[0]; p.text = 'Q2: 30-DAY READMISSION LOGIC?'; p.font.size = Pt(9.0); p.font.bold = True; p.font.color.rgb = COLOR_AMBER; p.space_after = Pt(2)
+p = tf.add_paragraph(); p.text = 'Longitudinal Window Calculation'; p.font.size = Pt(11.5); p.font.bold = True; p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(5)
+p = tf.add_paragraph(); p.text = 'Evaluator Question: How did you compute 30-day readmissions without an explicit flag in the raw data?'; p.font.size = Pt(8.5); p.font.bold = True; p.font.color.rgb = COLOR_TEXT_MUTED; p.space_after = Pt(4)
+p = tf.add_paragraph(); p.text = 'Defense Answer: Engineered a longitudinal window algorithm in Python/DAX: sequenced encounters chronologically by patient key, filtered for consecutive Inpatient encounter classes, and calculated whether elapsed time between prior discharge and next admission was Δt <= 30 days.'; p.font.size = Pt(8.3); p.font.color.rgb = COLOR_TEXT_DARK
 
-        # Question & Answer Text Box
-        tb_content = slide10.shapes.add_textbox(cx + Inches(0.18), card_y + Inches(0.85), card_w - Inches(0.36), card_h - Inches(0.95))
-        tf_content = tb_content.text_frame
-        tf_content.word_wrap = True
-        tf_content.margin_left = tf_content.margin_right = tf_content.margin_top = tf_content.margin_bottom = 0
-        
-        # Question paragraph
-        p_q = tf_content.paragraphs[0]
-        p_q.text = q_question
-        p_q.font.size = Pt(11)
-        p_q.font.bold = True
-        p_q.font.color.rgb = COLOR_TEXT_MAIN
-        p_q.space_after = Pt(8)
+# Q3
+add_card(s10, Inches(0.5) + (c_w + c_gap)*2, top_q, c_w, h_q, border_color=COLOR_EMERALD, border_width=Pt(1.5))
+tb = s10.shapes.add_textbox(Inches(0.7) + (c_w + c_gap)*2, top_q + Inches(0.15), c_w - Inches(0.4), h_q - Inches(0.3))
+tf = tb.text_frame; tf.word_wrap = True; tf.vertical_anchor = MSO_ANCHOR.TOP; tf.margin_left = tf.margin_right = tf.margin_top = tf.margin_bottom = 0
+p = tf.paragraphs[0]; p.text = 'Q3: ENTERPRISE-GRADE RIGOR?'; p.font.size = Pt(9.0); p.font.bold = True; p.font.color.rgb = COLOR_EMERALD; p.space_after = Pt(2)
+p = tf.add_paragraph(); p.text = 'Statistical & Clinical Depth'; p.font.size = Pt(11.5); p.font.bold = True; p.font.color.rgb = COLOR_TEXT_DARK; p.space_after = Pt(5)
+p = tf.add_paragraph(); p.text = 'Evaluator Question: What distinguishes this from basic BI dashboards?'; p.font.size = Pt(8.5); p.font.bold = True; p.font.color.rgb = COLOR_TEXT_MUTED; p.space_after = Pt(4)
+p = tf.add_paragraph(); p.text = 'Defense Answer: Rather than descriptive aggregations, this platform incorporates clinical risk models (Charlson Comorbidity Index), statistical stay anomaly detection (Z-scores), Pareto spend concentration, national ED benchmarks (5.0%), and role-tailored governance for 5 hospital executives.'; p.font.size = Pt(8.3); p.font.color.rgb = COLOR_TEXT_DARK
 
-        # Answer paragraph
-        p_a = tf_content.add_paragraph()
-        p_a.text = q_answer
-        p_a.font.size = Pt(9.5)
-        p_a.font.color.rgb = COLOR_TEXT_DIM
+add_footer(s10, 'HIPAA = Health Insurance Portability and Accountability Act | RLS = Row-Level Security | DAX = Data Analysis Expressions | VertiPaq = Power BI Engine | CCI = Charlson Comorbidity Index', 10)
 
-    # Bottom Full-Width Compliance Banner
-    banner = slide10.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.8), Inches(6.3), Inches(11.733), Inches(0.55))
-    banner.fill.solid()
-    banner.fill.fore_color.rgb = COLOR_CARD_BG
-    banner.line.color.rgb = COLOR_CARD_BORDER
-    banner.line.width = Pt(1.0)
-
-    tf_ban = banner.text_frame
-    tf_ban.word_wrap = True
-    tf_ban.vertical_anchor = MSO_ANCHOR.MIDDLE
-    tf_ban.margin_left = Inches(0.25)
-    tf_ban.margin_right = Inches(0.25)
-
-    p_ban = tf_ban.paragraphs[0]
-    p_ban.text = "HIPAA Safe Harbor De-Identified  •  Power BI Dynamic Row-Level Security (RLS)  •  Academic Viva Distinction Ready (40/40 Marks)"
-    p_ban.font.size = Pt(10.5)
-    p_ban.font.bold = True
-    p_ban.font.color.rgb = COLOR_AMBER
-    p_ban.alignment = PP_ALIGN.CENTER
-
-    slide10.notes_slide.notes_text_frame.text = (
-        "In conclusion, our solution meets all HIPAA Safe Harbor de-identification standards and includes Power BI Row-Level Security. "
-        "To address key viva questions: our Star Schema guarantees VertiPaq efficiency, our 30-day readmission algorithm evaluates longitudinal intervals, "
-        "and our role-specific dashboards bridge the gap between clinical data and executive action. Thank you, and I am ready for questions."
-    )
-
-    # Save presentation
-    output_path = 'Healthcare_EHR_Capstone_Presentation.pptx'
-    prs.save(output_path)
-    print(f"Presentation saved successfully to {output_path}")
-
-if __name__ == '__main__':
-    create_deck()
+out_file = 'Healthcare_EHR_Capstone_Presentation.pptx'
+prs.save(out_file)
+print('SUCCESSFULLY GENERATED FINAL DECK:', out_file)

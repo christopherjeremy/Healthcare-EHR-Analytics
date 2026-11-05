@@ -83,19 +83,15 @@ The Power BI report (`Capstone Project 1.pbix`) provides five persona-specific r
 ```text
 ├── Capstone Project 1.pbix                   # Master Microsoft Power BI report file (5 dashboard views)
 ├── Capstone_Presentation Christopher Jeremy A W.pptx # Executive presentation slide deck
-├── Healthcare_EHR_Capstone_Report.md        # Comprehensive technical & clinical documentation report
+├── Capstone Project 1 - Project Proposal Healthcare EHR Analytics... # Formal project proposal document
+├── Healthcare_EHR_Capstone_Report.md        # Comprehensive technical and clinical report
 ├── Healthcare_EHR_Presentation_Deck.md       # Slide-by-slide viva defense presentation notes
 ├── Healthcare_EHR_DAX_Measures.dax          # Complete catalog of 35+ production DAX measures
-├── Healthcare_EHR_Presentation.html         # Interactive slide presentation companion
+├── Healthcare_EHR_Presentation.html         # Interactive HTML slide presentation companion
 ├── PowerBI_StepByStep_Model_Setup.md        # Data ingestion and model configuration guide
-├── build_master_pptx.py                     # Presentation build automation script
-├── build_perfect_presentation.py            # Enhanced presentation generation script
-├── generate_flawless_pptx.py                # Standalone presentation builder
-├── generate_presentation.py                 # Initial presentation synthesis utility
-├── csv/                                     # Raw transactional EHR CSV source tables
-├── processed_data/                          # Cleaned, normalized Star Schema tables ready for BI
-├── presentation_assets/                     # Presentation graphics, schema diagrams, and visuals
-└── slide_renders/                           # Slide preview render captures
+├── generate_presentation.py                 # Presentation build automation script
+├── presentation_assets/                     # Dashboard previews, schema diagrams, and visuals
+└── processed_data/                          # Cleaned, normalized Star Schema tables ready for BI
 ```
 
 ---
